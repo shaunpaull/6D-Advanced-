@@ -100,8 +100,8 @@ std::vector<DAGNode> createLattice(int width, int height, int depth, int time, i
     return lattice;
 }
 
-// Function to encrypt a message using the 6D lattice symbols
-std::vector<unsigned int> encryptMessage(const std::string& message, const std::vector<DAGNode>& lattice) {
+// Function to encrypt a message using the 6D lattice symbols with temporal diffusion
+std::vector<unsigned int> encryptMessageWithDiffusion(const std::string& message, const std::vector<DAGNode>& lattice) {
     std::vector<unsigned int> encryptedData;
 
     for (char c : message) {
@@ -113,8 +113,8 @@ std::vector<unsigned int> encryptMessage(const std::string& message, const std::
     return encryptedData;
 }
 
-// Function to decrypt a message using the 6D lattice symbols
-std::string decryptMessage(const std::vector<unsigned int>& encryptedData, const std::vector<DAGNode>& lattice) {
+// Function to decrypt a message using the 6D lattice symbols with temporal diffusion
+std::string decryptMessageWithDiffusion(const std::vector<unsigned int>& encryptedData, const std::vector<DAGNode>& lattice) {
     std::string decryptedMessage;
 
     for (unsigned int symbol : encryptedData) {
@@ -153,6 +153,42 @@ std::vector<unsigned int> xorWithKey(const std::vector<unsigned int>& message, c
     return result;
 }
 
+// Function to encrypt a message using the 6D lattice symbols with temporal diffusion in parallel
+void parallelEncryptWithDiffusion(const std::string& message, const std::vector<DAGNode>& lattice, std::vector<unsigned int>& encryptedData,
+                                  int start, int end) {
+    for (int i = start; i < end; i++) {
+        unsigned int latticeIndex = message[i] % lattice.size();
+        unsigned int symbol = lattice[latticeIndex].symbol.symbol;
+        encryptedData[i] = symbol;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Introduce temporal diffusion delay
+    }
+}
+
+// Function to encrypt a message using the 6D lattice symbols with temporal diffusion in parallel
+std::vector<unsigned int> encryptMessageParallelWithDiffusion(const std::string& message, const std::vector<DAGNode>& lattice) {
+    std::vector<unsigned int> encryptedData(message.size());
+
+    int numThreads = std::thread::hardware_concurrency();
+    std::vector<std::thread> threads(numThreads);
+
+    int chunkSize = message.size() / numThreads;
+    int start = 0;
+    int end = 0;
+
+    for (int i = 0; i < numThreads; i++) {
+        start = i * chunkSize;
+        end = (i == numThreads - 1) ? message.size() : (i + 1) * chunkSize;
+
+        threads[i] = std::thread(parallelEncryptWithDiffusion, std::ref(message), std::ref(lattice), std::ref(encryptedData), start, end);
+    }
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    return encryptedData;
+}
+
 int main() {
     // Create a 6D lattice with Unicode symbols
     int width = 10;
@@ -163,9 +199,9 @@ int main() {
     int spirit = 10;
     std::vector<DAGNode> lattice = createLattice(width, height, depth, time, energy, spirit);
 
-    // Encrypt a message using the 6D lattice symbols
+    // Encrypt a message using the 6D lattice symbols with temporal diffusion
     std::string message = "I pr41se tH3 L0Rd 4nd Br34k th3 L4w!";
-    std::vector<unsigned int> encryptedMessage = encryptMessage(message, lattice);
+    std::vector<unsigned int> encryptedMessage = encryptMessageParallelWithDiffusion(message, lattice);
 
     // Generate a key with the same length as the message
     std::vector<unsigned int> key;
@@ -183,9 +219,9 @@ int main() {
     std::string encryptedString = unicodeToString(encryptedData);
     std::cout << "Encrypted Message (Unicode Code Points): " << encryptedString << std::endl;
 
-    // Decrypt the message using the 6D lattice symbols
+    // Decrypt the message using the 6D lattice symbols with temporal diffusion
     std::vector<unsigned int> decryptedData = xorWithKey(encryptedData, key);
-    std::string decryptedMessage = decryptMessage(decryptedData, lattice);
+    std::string decryptedMessage = decryptMessageWithDiffusion(decryptedData, lattice);
     std::cout << "Decrypted Message: " << decryptedMessage << std::endl;
 
     return 0;
