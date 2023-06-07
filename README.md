@@ -1,6 +1,6 @@
 # 6D-Advanced-
 6D Advanced🔺
-additional header files: The code now includes the <fstream>, <memory>, <thread>, <chrono>, and <sstream> header files to provide functionalities for file input/output operations, smart pointers, multi-threading, timing, and string stream operations.
+The code now includes the <fstream>, <memory>, <thread>, <chrono>, and <sstream> header files to provide functionalities for file input/output operations, smart pointers, multi-threading, timing, and string stream operations.
 
 File I/O functions: The code includes two new functions, saveEncryptedMessage and loadEncryptedMessage, which allow saving the encrypted message to a file and loading the encrypted message from a file, respectively. These functions use file streams (std::ofstream and std::ifstream) to write and read the encrypted message data.
 
